@@ -1,6 +1,8 @@
 import parseLiveCitibikeData as parse
 import citibikeStationLocation as location
 
+import datetime
+
 def getStationDataForTime(time, directory):
   data = parse.readFromFileToDictionary(directory + parse.filePathForTime(time))
   locations = location.getStationLocations()
@@ -15,6 +17,8 @@ def getStationDataForTime(time, directory):
 # stations to bikes
 def getStationData(date, directory, from_time, to_time, increments):
   rtn = {}
-  from time in range(from_time, to_time, increments):
-    rtn[time] = getStationDataForTime(time, directory)
+  for time_minutes in range(from_time, to_time, increments):
+    time_object = datetime.datetime(date.year, date.month, date.day,
+                                    int(time_minutes / 60), time_minutes % 60)
+    rtn[time_minutes] = getStationDataForTime(time_object, directory)
   return rtn
