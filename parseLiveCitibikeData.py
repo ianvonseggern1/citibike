@@ -32,9 +32,9 @@ def unpackStationData(packed):
   data_array = bitstring.BitStream(bytes=packed).unpack('uint:14, uint:1,  uint:8, uint:1, uint:8')
   return {'station_id': str(data_array[0]),
           'is_renting': data_array[1],
-          'num_bikes_available': data_array[2],
+          'bikes': data_array[2],
           'is_returning': data_array[3],
-          'num_docks_available': data_array[4]}
+          'docks': data_array[4]}
 
 def writeToFile(filename):
   stations = downloadCurrentCitibikeData()
