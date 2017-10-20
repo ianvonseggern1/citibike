@@ -20,7 +20,13 @@ def getStationData(date, directory, from_time, to_time, increments):
   for time_minutes in range(from_time, to_time, increments):
     time_object = datetime.datetime(date.year, date.month, date.day,
                                     int(time_minutes / 60), time_minutes % 60)
-    rtn[time_minutes] = parse.readFromFileToDictionary(directory + parse.filePathForTime(time_object))
+    path = directory + parse.filePathForTime(time_object)
+
+    try:
+      rtn[time_minutes] = parse.readFromFileToDictionary(path)
+    except:
+      print("Couldn't find file at: " + path)
+      
   return rtn
 
 # Returns a dictionary of data and locations
