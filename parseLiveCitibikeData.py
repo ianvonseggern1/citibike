@@ -5,6 +5,8 @@ import os
 
 import bitstring
 
+BASE_PATH = './citibike_availability_data/'
+
 # Provides an array of dictionaries for all stations giving station_id
 # as well as num_bikes_available and num_docks_available. Also an is_renting
 # and is_returning bool
@@ -12,7 +14,9 @@ def downloadCurrentCitibikeData():
   url_string = "https://gbfs.citibikenyc.com/gbfs/en/station_status.json"
   url = urllib.request.urlopen(url_string)
   return json.loads(url.read().decode())['data']['stations']
-  
+
+##### Write data for all stations at a specific time to a single file #####
+
 # This packs information about a single station into 4 bytes
 # The scheme:
 # 14 bits for station_id
@@ -66,7 +70,7 @@ def readFromFileToDictionary(filename):
 
 # Creates a filepath of yyyy/mm/dd/hh/mm.data
 def filePathForTime(time):
-  path = './citibike_availability_data/'
+  path = BASE_PATH
   path += str(time.year) + '/'
   path += str(time.month) + '/'
   path += str(time.day) + '/'
