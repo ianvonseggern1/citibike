@@ -6,6 +6,7 @@ import os
 import bitstring
 
 BASE_PATH = './citibike_availability_data/'
+#BASE_PATH = './test_citibike_availability_data/'
 
 # Provides an array of dictionaries for all stations giving station_id
 # as well as num_bikes_available and num_docks_available. Also an is_renting

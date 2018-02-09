@@ -7,6 +7,11 @@ import sys
 sys.path.append('/root/citibike/citibike/')
 import parseLiveCitibikeData as parse
 
+# TODO
+# Move website to this backend for more dets
+# Create overview of station functions (percent of time empty)
+# Think about ways to display that data
+
 # parseLiveCitibikeData scrapes the API at the moment and can be
 # used with a cron job to store historical data. Because of this it is
 # indexed by time. For many uses it would be more helpful to have
@@ -59,7 +64,7 @@ def getStationData(station, date, is_bike, from_time, to_time, increment):
     return rtn
 
 # Assumes data exists on a SCRAPE_INTERVAL basis
-def writeDayOfDataByStation(day):
+def writeDayOfDataByStation(day, print_progress=True):
     data_indexed_by_station = getDayOfData(day)
 
     total_stations = len(data_indexed_by_station.keys())
@@ -95,11 +100,17 @@ def writeDayOfDataByStation(day):
         docks_file.close()
         bikes_file.close()
 
-        # todo fix this
         stations_processed += 1
-        if stations_processed == int(total_stations / 10):
-            print(str(int(stations_processed / total_stations)) + '%')
+        if print_progress and stations_processed % int(total_stations / 10) == 0:
+            print(str(int(100 * stations_processed / total_stations)) + '%')
 
+# Inclusive of both endpoints
+def writeBatchOfData(from_day, to_day):
+    day = from_day
+    while day <= to_day:
+        writeDayOfDataByStation(day, False)
+        print('Finished reindexing ' + str(day))
+        day += datetime.timedelta(days=1)
 
 def createDirectoryOpenFile(path):
     directory = os.path.dirname(path)
@@ -145,5 +156,9 @@ def getDayOfData(day):
                     station_to_data[station_id] = {minutes_past_midnight: station_data}
     return station_to_data
                 
-                
+# By default we write yesterday. This way we can set up a cron job for it
+if __name__ == "__main__":
+    today = datetime.date.today()
+    yesterday -= datetime.timedelta(days=1)
+    writeDayOfDataByStation(yesterday)
             
