@@ -1,5 +1,6 @@
 import parseLiveCitibikeData as parse
 import citibikeStationLocation as location
+import reindexByStation as stationIndex
 
 import datetime
 
@@ -37,6 +38,5 @@ def getStationDataAndLocations(date, directory, from_time, to_time, increments):
   };
   
 # station is the station_id as a string
-def getSpecificStationData(station, date, directory, from_time, to_time, increments):
-  data = getStationData(date, directory, from_time, to_time, increments)
-  return {key: value[station] for (key, value) in data.items()}
+def getSpecificStationData(station, date, is_bike, directory, from_time, to_time, increment):
+  return stationIndex.getStationData(station, date, is_bike, from_time, to_time, increment, directory)

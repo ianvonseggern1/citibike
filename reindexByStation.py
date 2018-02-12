@@ -1,22 +1,19 @@
 import datetime
 import os
 
+from collections import Counter
+
 import bitstring
 
 import sys
 sys.path.append('/root/citibike/citibike/')
 import parseLiveCitibikeData as parse
 
-# TODO
-# Move website to this backend for more dets
-# Create overview of station functions (percent of time empty)
-# Think about ways to display that data
-
 # parseLiveCitibikeData scrapes the API at the moment and can be
 # used with a cron job to store historical data. Because of this it is
 # indexed by time. For many uses it would be more helpful to have
 # this data indexed primarily by station_id. This file contains the
-# code taking a days worth of data and reindexing.
+# code for taking a days worth of data and reindexing.
 
 # Minutes between scrapes. This is not used on the read side, but
 # is used as an assumption on the write side
@@ -43,12 +40,12 @@ MAX_COUNT_VALUE = 250 # Leaving a bit of breathing room if other special values 
 #
 # Returns dictionary key'ed on time since midnight, value is a dict of
 # data_available: bool, is_renting: bool, count: int
-def getStationData(station, date, is_bike, from_time, to_time, increment):
+def getStationData(station, date, is_bike, from_time, to_time, increment, directory = '/root/'):
     if(from_time % SCRAPE_INTERVAL != 0 or to_time % SCRAPE_INTERVAL != 0 or increment % SCRAPE_INTERVAL != 0):
         print('Times must be a multiple of the SCRAPE_INTERVAL')
 
     rtn = {}
-    path = getFilepath(date, is_bike, station)
+    path = directory + getFilepath(date, is_bike, station)
     file_contents = open(path, 'rb')
     for time in range(from_time, to_time, increment):
         position = int(time / SCRAPE_INTERVAL)
@@ -61,6 +58,49 @@ def getStationData(station, date, is_bike, from_time, to_time, increment):
         else:
             count = int.from_bytes(value, byteorder='little')
             rtn[time] = {'data_available': True, 'is_renting': True, 'count': count}
+    return rtn
+
+# Provides a summary by giving a dictionary of samples from a time increment
+# with a count of empty stations, low stations (1-2), and stations with available
+# bikes/docks (3+). Also has a count of data not available and not renting.
+# Data is returned in nested arrays, one array per day, each of those holding one
+# dictionary for each increment of time from from_time to to_time.
+def stationSummary(station, is_bike, from_date, to_date, from_time, to_time, increment, directory='/root/'):
+    if(from_time % SCRAPE_INTERVAL != 0 or to_time % SCRAPE_INTERVAL != 0 or increment % SCRAPE_INTERVAL != 0):
+        print('Times must be a multiple of the SCRAPE_INTERVAL')
+
+    dates = []
+    date = from_date
+    while date <= to_date:
+        dates.append(date)
+        date += datetime.timedelta(days=1)
+
+    return [stationSummaryForDay(station, is_bike, date, from_time, to_time, increment, directory) for date in dates]
+
+def stationSummaryForDay(station, is_bike, date, from_time, to_time, increment, directory):
+    rtn = []
+    path = directory + getFilepath(date, is_bike, station)
+    file_contents = open(path, 'rb')
+    file_start_position = int(from_time / SCRAPE_INTERVAL)
+    file_contents.seek(file_start_position)
+    samples = int(increment / SCRAPE_INTERVAL)
+    for time in range(from_time, to_time, increment):
+        counter = Counter()
+        for sample in range(samples):
+            value = file_contents.read(1)
+            if value == NO_DATA_AVAILABLE:
+                counter['data_not_available'] += 1
+            elif value == STATION_NOT_RENTING:
+                counter['not_renting'] += 1
+            else:
+                count = int.from_bytes(value, byteorder='little')
+                if count == 0:
+                    counter['empty'] += 1
+                elif count < 3:
+                    counter['low'] += 1
+                else:
+                    counter['available'] += 1
+        rtn.append(dict(counter))
     return rtn
 
 # Assumes data exists on a SCRAPE_INTERVAL basis
@@ -158,7 +198,6 @@ def getDayOfData(day):
                 
 # By default we write yesterday. This way we can set up a cron job for it
 if __name__ == "__main__":
-    today = datetime.date.today()
-    yesterday -= datetime.timedelta(days=1)
+    yesterday = datetime.date.today() - datetime.timedelta(days=1)
     writeDayOfDataByStation(yesterday)
             
