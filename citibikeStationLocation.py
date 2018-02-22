@@ -13,7 +13,8 @@ def downloadStationLocations():
   locations = {}
   for station in json.loads(url.read().decode())['data']['stations']:
     locations[station['station_id']] = {'lat': station['lat'],
-                                        'lon': station['lon']}
+                                        'lon': station['lon'],
+                                        'name': station['name']}
   return locations
 
 # First checks to see if we have cached station locations. If not it downloads them
@@ -47,3 +48,10 @@ def loadStationLocations():
       return pickle.load(f)
   except:
     return None
+
+# This redownloads the locations and names. This lets the script be
+# chron-ed
+if __name__ == "__main__":
+  locations = downloadStationLocations()
+  if len(locations) > 0:
+    saveStationLocations(locations)
