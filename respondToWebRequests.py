@@ -23,7 +23,7 @@ def doCitibikeSummaryJson(request):
         start_time = int(query_parameters['start_time'][0])
     if 'end_time' in query_parameters:
         end_time = int(query_parameters['end_time'][0])
-    if 'increment' in query_parameters:
+    if 'step' in query_parameters:
         increment = int(query_parameters['step'][0])
     if 'station_type' in query_parameters and query_parameters['station_type'][0] == 'dock':
         station_type = 'dock'
