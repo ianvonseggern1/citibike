@@ -39,18 +39,15 @@ def insertData(data, timestamp):
 
 # Assumes relative file paths are of the form yyyy/mm/dd/hh/mm.data
 # Walks all files in the directory and inserts the values into the DB
-def walkFiles(directory):
-    for current_dir, sub_dir, files in os.walk(directory):
+def walkFiles(path_to_year):
+    for current_dir, sub_dir, files in os.walk(path_to_year):
         if len(files) > 0:
-            print("Adding {}".format(current_dir))
+            print("Adding month {}".format(current_dir))
         for f in files:
-            path = os.path.join(current_dir, f)
+            path = os.path.join(path_to_year, current_dir, f)
             data = p.readFromFileToDictionary(path)
             # Path is of the form ./yyyy/mm/dd/hh/mm.data (in nyc timezone)
-            parts = path.split("/")
-            if len(parts) != 6:
-                print("ERROR path {} not of length 6".format(path))
-                continue
-            minutes = parts[5].split(".data")[0]
-            t = datetime(parts[1], parts[2], parts[3], parts[4], minutes)
+            parts = path.split("/")[-5:]
+            minutes = parts[4].split(".data")[0]
+            t = datetime(parts[0], parts[1], parts[2], parts[3], minutes)
             insertData(data, t)
