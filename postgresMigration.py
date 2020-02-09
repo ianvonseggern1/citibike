@@ -28,7 +28,7 @@ def insertData(data, timestamp):
 
     conn = psycopg2.connect("dbname='postgres' user='postgres' host='localhost' password='docker'")
     c = conn.cursor()
-    values = ["({}, {}, {}, {}, {}, {})".format(
+    values = ["({}, {}, {}, {}, {}, TO_TIMESTAMP({},'YYYY-MM-DD HH24:MI:SS'))".format(
         station_id,
         vals["bikes"],
         vals["docks"],
