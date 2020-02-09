@@ -49,5 +49,5 @@ def walkFiles(path_to_year):
             # Path is of the form ./yyyy/mm/dd/hh/mm.data (in nyc timezone)
             parts = path.split("/")[-5:]
             minutes = parts[4].split(".data")[0]
-            t = datetime(parts[0], parts[1], parts[2], parts[3], minutes)
+            t = datetime(int(parts[0]), int(parts[1]), int(parts[2]), int(parts[3]), int(minutes))
             insertData(data, t)
