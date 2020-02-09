@@ -35,7 +35,7 @@ def insertData(data, timestamp):
         vals["is_renting"],
         vals["is_returning"],
         utc_timestamp) for station_id, vals in data.items()]
-    cur.execute("INSERT INTO citibike VALUES {}".format(values.join(", ")))
+    c.execute("INSERT INTO citibike VALUES {}".format(values.join(", ")))
 
 # Assumes relative file paths are of the form yyyy/mm/dd/hh/mm.data
 # Walks all files in the directory and inserts the values into the DB
