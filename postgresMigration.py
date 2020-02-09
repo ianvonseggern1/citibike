@@ -21,13 +21,12 @@ import parseLiveCitibikeData as p
 #
 # data is a json mapping station id to the following value
 # {'is_renting': 1, 'num_bikes_available': 13, 'is_returning': 1, 'num_docks_available': 25}
-def insertData(data, timestamp):
+def insertData(db_conn, data, timestamp):
     eastern_time = pytz.timezone('US/Eastern').localize(timestamp)
     utc_time = eastern_time.astimezone(pytz.utc)
     utc_timestamp = utc_time.strftime("%Y-%m-%d %H:%M:%S")
 
-    conn = psycopg2.connect("dbname='postgres' user='postgres' host='localhost' password='docker'")
-    c = conn.cursor()
+    c = db_conn.cursor()
     values = ["({}, {}, {}, {}, {}, TO_TIMESTAMP('{}','YYYY-MM-DD HH24:MI:SS'))".format(
         station_id,
         vals["bikes"],
@@ -36,10 +35,14 @@ def insertData(data, timestamp):
         'True' if vals["is_returning"] else 'False',
         utc_timestamp) for station_id, vals in data.items()]
     c.execute("INSERT INTO citibike VALUES {}".format(", ".join(values)))
+    db_conn.commit()
+    c.close()
 
 # Assumes relative file paths are of the form yyyy/mm/dd/hh/mm.data
 # Walks all files in the directory and inserts the values into the DB
 def walkFiles(path_to_year):
+    db_conn = psycopg2.connect("dbname='postgres' user='postgres' host='localhost' password='docker'")
+    
     for current_dir, sub_dir, files in os.walk(path_to_year):
         if len(files) > 0:
             print("Adding month {}".format(current_dir))
@@ -50,4 +53,6 @@ def walkFiles(path_to_year):
             parts = path.split("/")[-5:]
             minutes = parts[4].split(".data")[0]
             t = datetime(int(parts[0]), int(parts[1]), int(parts[2]), int(parts[3]), int(minutes))
-            insertData(data, t)
+            insertData(db_conn, data, t)
+
+    db_conn.close()
