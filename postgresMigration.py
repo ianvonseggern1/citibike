@@ -32,8 +32,8 @@ def insertData(data, timestamp):
         station_id,
         vals["bikes"],
         vals["docks"],
-        vals["is_renting"],
-        vals["is_returning"],
+        'True' if vals["is_renting"] else 'False',
+        'True' if vals["is_returning"] else 'False',
         utc_timestamp) for station_id, vals in data.items()]
     c.execute("INSERT INTO citibike VALUES {}".format(", ".join(values)))
 
